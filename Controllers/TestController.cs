@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Google.Cloud.Firestore;
+using Teletipbe.Hubs;
 
 namespace Teletipbe.Controllers
 {
@@ -8,10 +10,12 @@ namespace Teletipbe.Controllers
     public class TestController : ControllerBase
     {
         private readonly FirestoreDb _firestore;
+        private readonly IHubContext<VideoCallHub> _hubContext;
 
-        public TestController()
+        public TestController(IHubContext<VideoCallHub> hubContext)
         {
             _firestore = FirestoreDb.Create("teletipbe");
+            _hubContext = hubContext;
         }
 
         [HttpGet("firestore-test")]
@@ -34,5 +38,30 @@ namespace Teletipbe.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpPost("start-video-call")]
+        public async Task<IActionResult> StartVideoCall([FromBody] StartVideoCallRequest request)
+        {
+            try
+            {
+                // Tüm bağlı client'lara video call signal'i gönder
+                await _hubContext.Clients.All.SendAsync("StartVideoCall", request.AppointmentId);
+
+                return Ok(new
+                {
+                    message = "Video call signal sent successfully",
+                    appointmentId = request.AppointmentId
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+    }
+
+    public class StartVideoCallRequest
+    {
+        public string AppointmentId { get; set; } = string.Empty;
     }
 }

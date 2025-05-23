@@ -1,4 +1,6 @@
 using Google.Cloud.Firestore.V1;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Firestore;
 using Teletipbe.Services;
 using Teletipbe.Hubs;
@@ -9,13 +11,18 @@ using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
+FirebaseApp.Create(new AppOptions
+{
+    Credential = GoogleCredential.FromFile("ServiceAccount/teletipbe-firebase-adminsdk-e19td-4746d67c8f.json"),
+});
+
 // 1) Firebase kimlik doðrulama dosyasý
-string path = "ServiceAccount/teletipbe-firebase-adminsdk-e19td-dd82317280.json";
+string path = "ServiceAccount/teletipbe-firebase-adminsdk-e19td-4746d67c8f.json";
 Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
 
 // 2) Firestore ve servislerin DI kaydý
-builder.Services.AddSingleton(provider => FirestoreDb.Create("teletipbe"));
 builder.Services.AddSingleton<FirebaseService>();
+builder.Services.AddSingleton(provider => FirestoreDb.Create("teletipbe"));
 builder.Services.AddSingleton<AppointmentService>();
 builder.Services.AddSingleton<MessageService>();
 builder.Services.AddSingleton<ENabizService>();
@@ -47,7 +54,8 @@ builder.Services.AddCors(options =>
 builder.WebHost.ConfigureKestrel(opts =>
 {
     opts.Listen(IPAddress.Any, 7231, lo => lo.UseHttps());
-    // Bu, dev-cert’i http.sys üzerindeki AnyIP’den sunar
+    opts.Listen(IPAddress.Any, 5200); // HTTP endpoint eklendi
+    // Bu, dev-cert'i http.sys üzerindeki AnyIP'den sunar
 });
 
 var app = builder.Build();

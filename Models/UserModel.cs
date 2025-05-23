@@ -1,24 +1,29 @@
-﻿using Google.Cloud.Firestore;
+﻿// Models/UserModel.cs
+using Google.Cloud.Firestore;
 
 namespace Teletipbe.Models
 {
     [FirestoreData]
-
     public class UserModel
     {
+        [FirestoreDocumentId]
+        public string Id { get; set; } = string.Empty;
+
+        // FirestoreProperty attribute, koleksiyondaki alan adıyla eşleşmeli
         [FirestoreProperty]
-        public string Id { get; set; } = string.Empty;  // Kullanıcı ID'si (Firestore Document ID)
+        public string Name { get; set; } = string.Empty;
 
         [FirestoreProperty]
-        public string Name { get; set; } = string.Empty;  // Kullanıcı adı
+        public string Email { get; set; } = string.Empty;
+
+        // Oluştururken sadece POST gövdesinden okunacak, Firestore’a yazılmaz
+        [FirestoreProperty]
+        public string Password { get; set; } = string.Empty;
 
         [FirestoreProperty]
-        public string Email { get; set; } = string.Empty;  // Kullanıcı e-postası
+        public string Role { get; set; } = string.Empty;
 
         [FirestoreProperty]
-        public string Role { get; set; } = "Patient";  // Rol (Patient veya Doctor)
-
-        [FirestoreProperty]
-        public string PhoneNumber { get; set; } = string.Empty;  // Telefon numarası
+        public string PhoneNumber { get; set; } = string.Empty;
     }
 }

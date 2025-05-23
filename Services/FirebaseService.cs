@@ -1,9 +1,5 @@
-﻿
-using FirebaseAdmin;
-using Google.Apis.Auth.OAuth2;
+﻿// Services/FirebaseService.cs
 using FirebaseAdmin.Auth;
-using Google.Cloud.Firestore;
-
 
 namespace Teletipbe.Services
 {
@@ -11,42 +7,29 @@ namespace Teletipbe.Services
     {
         public FirebaseService()
         {
-            // Firebase initialization gerekli ise burada yapılabilir
+            // FirebaseApp.InitializeApp(...) 
+            // FirebaseAdmin konfigurasyonu zaten Program.cs tarafında yapıldıysa gerek yok
         }
 
-        // Kullanıcıyı e-posta adresi ile getir
-        public async Task<UserRecord> GetUserByEmailAsync(string email)
+        public Task<UserRecord> GetUserByUidAsync(string uid)
+            => FirebaseAuth.DefaultInstance.GetUserAsync(uid);
+
+        public Task<UserRecord> GetUserByEmailAsync(string email)
+            => FirebaseAuth.DefaultInstance.GetUserByEmailAsync(email);
+
+        public Task<string> CreateUserAsync(string email, string password)
         {
-            try
+            var args = new UserRecordArgs
             {
-                var user = await FirebaseAuth.DefaultInstance.GetUserByEmailAsync(email);
-                return user;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error retrieving user by email: {ex.Message}");
-            }
+                Email = email,
+                Password = password
+            };
+            return FirebaseAuth.DefaultInstance
+                       .CreateUserAsync(args)
+                       .ContinueWith(t => t.Result.Uid);
         }
 
-        // Yeni kullanıcı oluştur
-        public async Task<string> CreateUserAsync(string email, string password, string name)
-        {
-            try
-            {
-                var args = new UserRecordArgs
-                {
-                    Email = email,
-                    Password = password,
-                    DisplayName = name,
-                };
-
-                var user = await FirebaseAuth.DefaultInstance.CreateUserAsync(args);
-                return user.Uid;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error creating user: {ex.Message}");
-            }
-        }
+        public Task DeleteUserAsync(string uid)
+            => FirebaseAuth.DefaultInstance.DeleteUserAsync(uid);
     }
 }
